@@ -1,0 +1,191 @@
+(defsrc
+ grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+ tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+ caps a    s    d    f    g    h    j    k    l    ;    '    ret
+ lsft z    x    c    v    b    n    m    ,    .    /    rsft
+ lctl lmet lalt           spc            ralt rctl
+ )
+
+(defalias
+ ;; this is a comment
+ ;; toggle layer aliases
+ space_sft (layer-toggle space_layer)
+ space_qwerty (layer-toggle space_layer_qwerty)
+ ctl_func (layer-toggle windows_functions)
+ mov (layer-toggle movements)
+ vim (layer-toggle vim_layer)
+ lay (layer-toggle layers)
+ ctl_qwerty (layer-toggle right_control_qwerty)
+
+ ;; Didn't delete mouse layer from example, but didn't use it either
+ mse (layer-toggle mouse)
+
+ ;; change the base layer between colemak and qwerty
+ cole (layer-switch colemak_dh_modified)
+ qwe (layer-switch qwerty)
+
+ ;; shifted keys
+quote S-'
+l_par S-9
+r_par S-0
+less S-,
+greater S-.
+! S-1
+at S-2
+# S-3
+$ S-4
+% S-5
+^ S-6
+& S-7
+* S-8
+under S--
++ S-=
+| S-\
+? S-/
+~ S-`
+: S-;
+{ S-[
+} S-]
+A S-a
+B S-b
+C S-c
+D S-d
+E S-e
+F S-f
+G S-g
+H S-h
+I S-i
+J S-j
+K S-k
+L S-l
+M S-m
+N S-n
+O S-o
+P S-p
+Q S-q
+R S-r
+S S-s
+T S-t
+U S-u
+V S-v
+W S-w
+X S-x
+Y S-y
+Z S-z
+
+;; rename some vim commands
+cwn (macro C-(w n)) ;; create new horizontal window
+cwv (macro C-(w v)) ;; create new vertical window
+cwh (macro C-(w h)) ;; move to left window
+cwj (macro C-(w j)) ;; move to below window
+cwk (macro C-(w k)) ;; move to above window
+cwl (macro C-(w l)) ;; move to right window
+cwq (macro C-(w q)) ;; close current window
+cwx (macro C-(w x)) ;; increase size of horizontal window
+cwi (macro C-(w i)) ;; increase size of vertical window
+cwz (macro C-(w z)) ;; decrease size of horizontal window
+cwd (macro C-(w d)) ;; decrease size of vertical window
+
+;; tap-hold keys with letters for tap and layer change for hold
+spc_sft (tap-hold-release 100 200 spc @space_sft)
+spc_qrty (tap-hold-release 100 200 spc @space_qwerty)
+r_ctl (tap-hold-release 200 200 rctl @ctl_qwerty)
+t_arr (tap-hold-release 200 200 t @mov)
+n_ctl (tap-hold-release 200 160 n @ctl_func)
+n_upper (tap-hold-release 200 160 @N @ctl_func)
+esc_vim (tap-hold-release 200 200 esc @vim)
+great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
+.ms (tap-hold-release 200 200 . @mse)
+)
+
+    (deflayer colemak_dh_modified
+     @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
+     tab    @l_par b    l    p    w       j    f     ,    u    q    x    [    ]
+     @esc_vim a     s    r @t_arr  @quote  '   @n_ctl e    i    o    k    ret
+     lsft      c     d    g    v    z       h    m     .    @under y    caps
+     lctl lmet lalt           @spc_sft            XX @r_ctl
+    )
+
+    (deflayer qwerty
+     grv 1    2    3    4    5    6    7    8    9    0    -    =    bspc
+     tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+     caps a    s    d    f    g    h    j    k    l    ;    '    ret
+     lsft z    x    c    v    b    n    m    ,    .    /    rsft
+     lctl lmet lalt           @spc_qrty            XX  rctl
+    )
+
+    (deflayer layers ;; lrld means a reload on current running kanata
+     _  @cole @qwe lrld _    _    _    _    _    _    _    _    _   _  
+     _  _  _  _   _    _    _    _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _
+     _    _    _              _              _    _
+    )
+
+    (deflayer space_layer
+     @great  @!    @at    @#    @$    @%    @^    grv    @&    @|    \    /    @*    bspc
+     @qwe   @r_par    @B     @L     @P     @W     @J     @F    ;     @U     @Q     @X    @{    @}
+     esc  @A     @S     @R     @T     =    @~     @n_upper     @E     @I     @O     @K    ret
+     lsft @C     @D     @G     @V     @Z     @H     @M    @:    @?     @Y    rsft
+     lctl lmet lalt           spc            ralt rctl
+    )
+
+    (deflayer space_layer_qwerty
+     _ _  _  _ _    _    _    _    _    _    _    _    _   _  
+     @cole  _  _  _   _    _    _    _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _
+     _    _    _              _              _    _
+    )
+
+    (deflayer windows_functions ;; Holding right index
+     _    _    _    _    _    _    _      _  _  _  _    _   _ _
+     _ _ _ _       _     _    _ C-f volu  _  _ _ _ _
+     _ _ _ _ bspc del    _ _  vold  _  _   _ _
+     _ _ _ _ _  _           _  _  mute  _ _  C-y 
+     _ _    _              ret              _       _
+    )
+
+    (deflayer movements ;; Holding left index
+     _ _ _   _   _   _   _   _   _   _   _  _  _ _
+     _ C-S-t C-w C-t   f5    _    C-d C-u home  end    _ _ _ _
+     _ C-S-n C-S-tab C-tab _    _    left down up rght   esc _  _
+     lsft _     mlft  _ _   _    C-left C-down C-up C-rght  _ _
+     _    _    _               ret             _       _
+    )
+
+    (deflayer vim_layer ;; Holding caps key in default position
+     _     _   _   _   _   _   _   _   _   _   _   _   _  _
+     _ C-u @cwq @cwx @cwi    _    y  u   i   o p   _ _    _
+     _ C-d _ @cwz @cwd _   @cwh  @cwj   @cwk   @cwl  esc _  _
+     _ _ _ @cwn @cwv _           @cwn @cwv _ _ _ _
+     _    _    _               spc             _       _
+    )
+    (deflayer right_control_qwerty
+     C-grv C-1    C-2    C-3    C-4    C-5    C-6    C-7    C-8    C-9    C-0    C--     C-=    C-bspc
+     C-tab  C-q    C-w    C-e    C-r    C-t    C-y    C-u    C-i    C-o    C-p    C-[    C-]    C-\
+     C-caps C-a    C-s    C-d    C-f    C-g    C-h    C-j    C-k    C-l    C-;    C-'    C-ret
+     C-lsft C-z    C-x    C-c    C-v    C-b    C-n    C-m    C-,    C-.    C-/    C-rsft
+     C-lctl C-lmet C-lalt           C-spc            C-ralt  rctl
+    )
+
+    (defalias
+     mwu (mwheel-up 50 120)
+     mwd (mwheel-down 50 120)
+     mwl (mwheel-left 50 120)
+     mwr (mwheel-right 50 120)
+    )
+
+    (deflayer mouse
+     _    _    _    _    _    _    _    _    _    _    _    _    _    _
+     _    @mwu bck  _    fwd  _    _    _    _    _    _    _    _    _
+     _    @mwd mlft _    mrgt mmid _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _
+     _    _    _              _              _    _
+    )
+
+    (defcfg
+     process-unmapped-keys yes ;; Uncomment for being able to press keys not present in defsrc
+     log-layer-changes no
+     windows-altgr add-lctl-release
+    )

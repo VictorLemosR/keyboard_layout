@@ -1,0 +1,1126 @@
+########atentar para trades ate as 11
+import datetime
+import polars as pl
+import requests
+import zipfile
+import base64
+from io import BytesIO
+
+class Main():
+
+    def __init__(self):
+        pass
+
+class Dates():
+
+    def __init__(self) -> None:
+        self.today = datetime.datetime.now()
+        self.get_last_business_day()
+
+    def get_last_business_day():
+        
+
+    PATH_BROKERS = r"M:\BOLSA\Victor\Bases\Broker_codes\broker_codes.parquet"
+    URL_B3 = "https://arquivos.b3.com.br/apinegocios/tickercsvbtb/viia3/2023-08-17"
+    def get_broker_codes(self):
+        self.brokers = pl.read_parquet(self.PATH_BROKERS)
+
+    def download_from_b3(self):
+        r = requests.get()
+        if r.status_code == 200:
+            pass
+        else:
+            print("Problema em baixar o arquivo")
+            raise(Exception)
+
+    def unzip(self):
+        z = zipfile.ZipFile(BytesIO(r.content))
+
+    def create_dataframe(self):
+        df = pl.read_csv(z.open(z.namelist()[0]), separator=";")
+
+    def 
+col = df.columns
+columns_rename = {
+        "TaxaDeJurosDoTermoDoNegocio": "rate", "QuantidadeNegociada": "qty",
+        "HoraEntrada": "hour", "CodigoParticipanteDoador": "lender",
+        "CodigoParticipanteTomador": "borrower",
+        }
+df = df.rename(columns_rename)
+df = df.select(pl.col(columns_rename.values()))
+
+df = df.with_columns(
+        pl.col("rate").str.replace(",", ".").cast(pl.Float64),
+        pl.col("lender").cast(pl.Int32),
+        pl.col("borrower").cast(pl.Int32),
+        pl.when(pl.col("hour") < 1.09e8)
+        .then(pl.lit("janela"))
+        .otherwise(pl.lit("dia"))
+        .alias("hour")
+        )
+
+functions = (pl.col("qty").sum().alias("traded"),
+        ((pl.col("rate")*pl.col("qty")).sum()/pl.col("qty").sum()).alias("average"),
+        pl.col("rate").min().alias("min"),
+        pl.col("rate").max().alias("max"),
+        (((pl.col("qty")
+        *((pl.col("rate")
+          - ((pl.col("rate")*pl.col("qty")).sum()/pl.col("qty").sum()))**2)).sum()
+        /pl.col("qty").sum())**0.5).alias("std"),)
+top_lender = df.groupby(["lender"]).agg(a).sort(by="traded", descending=True)
+top_lender = df.groupby(["lender"]).agg(
+        pl.col("qty").sum().alias("traded"),
+        ((pl.col("rate")*pl.col("qty")).sum()/pl.col("qty").sum()).alias("average"),
+        pl.col("rate").min().alias("min"),
+        pl.col("rate").max().alias("max"),
+        (((pl.col("qty")
+        *((pl.col("rate")
+          - ((pl.col("rate")*pl.col("qty")).sum()/pl.col("qty").sum()))**2)).sum()
+        /pl.col("qty").sum())**0.5).alias("std"),
+        ).sort(by="traded", descending=True)
+
+
+top_lender[:5].join(brokers, left_on="lender", right_on="code")
+top_borrower[:5].join(brokers, left_on="borrower", right_on="code")
+df
+df.select(a)
+
+m = Main()
+
+
+from xbbg import blp
+import polars as pl
+import datetime
+
+class Main():
+
+    def __init__(self) -> None:
+        t = Tickers()
+        self.b = Bbg_functions(t.tickers_list)
+        Writer(self.b.df)
+
+class Tickers():
+
+    PATH_EXCEL = r"M:\BOLSA\MATHEUS\GerencialFundSec V2.2.xlsm"
+    COL_TICKERS = "Sec_bloom"
+
+    def __init__(self) -> None:
+        self.obtain_df()
+        self.df_to_tickers()
+
+    def obtain_df(self):
+        self.tickers_df = pl.read_excel(
+                self.PATH_EXCEL, sheet_name="Data_Sec_Eq",
+                read_csv_options={"skip_rows": 2, "columns": [1]}
+                )
+
+    def df_to_tickers(self):
+        self.tickers_list = self.tickers_df.select(
+                pl.col(self.COL_TICKERS)
+                ).drop_nulls()[:, 0].to_list()
+
+class Bbg_functions():
+
+    def __init__(self, tickers) -> None:
+        self.tickers_list = tickers
+        self.today = datetime.date.today()
+
+        self.filter_by_ex_date()
+        self.obtain_dividends()
+
+    def filter_by_ex_date(self):
+        ex_date = blp.bdp(tickers=self.tickers_list, flds="DVD_EX_dt")
+        right_ex_date = blp.bdp(
+                tickers=self.tickers_list, flds="EQY_DVD_RIGHT_EX_DT_NEXT"
+                )
+
+        dividends_today = pl.col("dvd_ex_dt") == self.today 
+        ex_date = pl.from_pandas(
+                ex_date.reset_index()
+                ).filter(dividends_today)
+
+        rights_today = pl.col("eqy_dvd_right_ex_dt_next") == self.today 
+        right_ex_date = pl.from_pandas(
+                right_ex_date.reset_index()
+                ).filter(rights_today)
+
+
+        self.ex_date_list = ex_date.select(
+                pl.col("index")
+                ).drop_nulls()[:, 0].to_list()
+
+    def obtain_dividends(self):
+        today_string = self.today.strftime("%Y%m%d")
+        self.df = blp.bds(
+                tickers=self.ex_date_list, flds="DVD_HIST", 
+                DVD_START_DT=today_string, DVD_END_DT=today_string
+                )
+        self.df = pl.from_pandas(self.df.reset_index())
+
+class Writer():
+
+    OUTPUT_PATH = r"M:\BOLSA\Victor\Routines_files\Dividends\dividends"
+    def __init__(self, dataframe) -> None:
+        self.df = dataframe
+        self.format_data()
+        self.write_output()
+
+    def format_data(self):
+        self.df = self.df.select(
+                    pl.col(["index","dividend_amount"])
+                ).groupby("index").agg(
+                    pl.col("dividend_amount").sum()
+                )
+
+    def write_output(self):
+        today_string = datetime.datetime.today().strftime("%y-%m-%d")
+        self.df.write_parquet(self.OUTPUT_PATH + today_string + ".parquet")
+        self.df.write_csv(self.OUTPUT_PATH + today_string + ".txt", separator=";")
+
+m = Main()
+#a = blp.bds( tickers=m.b.tickers_list, flds="EQY_DVD_ADJUST_FACT", )
+m.b.ex_date_list
+m.b.tickers_list
+
+blp.bds(
+    tickers="JALL3 BZ EQUITY", flds="DVD_HIST_all", 
+    )
+
+
+import polars as pl
+import xlwings as xw
+
+class Main():
+
+    def __init__(self):
+        Inputs()
+        
+
+class Inputs():
+
+    WB_NAME = "Inputs.xlsx"
+    SHEET_NAME = "Last price"
+    RANGE = "G1:G"
+    PATH_INDEXES = r"M:\BOLSA\Victor\Routines_files\Download_indexes"
+    PATH_PRICES = r"M:\BOLSA\Victor\Routines_files\Last_prices"
+    def __init__(self):
+        self.obtain_wb()
+        self.last_line = 2
+        self.get_sql_info()
+        self.get_indexes()
+        while True:
+            self.obtain_prices()
+
+    def obtain_wb(self):
+        self.wb_inputs = ""
+        while self.wb_inputs == "":
+            try:
+                app = xw.apps.active
+                self.wb_inputs = app.books(self.WB_NAME)
+            except KeyError:
+                print("Foco na intância errada, mude para input.xlsx")
+        self.sheet_price = self.wb_inputs.sheets[self.SHEET_NAME]
+        app = xw.apps.active
+        self.wb_gerencial = ""
+        while self.wb_gerencial == "":
+            try:
+                app = xw.apps.active
+                self.wb_gerencial = app.books("output.xlsx")
+            except KeyError:
+                print("Foco na intância errada, mude para output.xlsx")
+        self.sheet_gerencial = self.wb_gerencial.sheets["Sheet1"]
+
+    def get_sql_info(self):
+        last_line_sql = self.sheet_price.range("T2").value
+        self.sheet_sql = self.wb_inputs.sheets["Base SQL"]
+        self.sql_base = self.sheet_sql.range("A1:G" + str(last_line_sql))
+
+    def get_indexes(self):
+        today = datetime.datetime.today().strftime("%Y-%m-%d")
+        path = self.PATH_INDEXES + "//" + today
+        self.ibov = pl.read_parquet(path + "IBOV.parquet")
+        self.small = pl.read_parquet(path + "SMLL.parquet")
+        self.ibx = pl.read_parquet(path + "IBXX.parquet")
+
+    def obtain_prices(self):
+        self.prices = self.sheet_price.range(
+                self.RANGE + str(self.last_line)
+                ).value
+        self.sheet_gerencial.range(
+                self.RANGE + str(self.last_line)
+                ).options(transpose=True).value = self.prices
+        self.last_line = int(self.prices[0])
+
+m = Main()
+
+
+from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
+import pandas as pd
+import polars as pl
+import xlwings as xw
+
+class Main():
+
+    def __init__(self):
+        self.sql_df = Sql_base().df
+        self.personal_df = Personal_base().df
+        self.differences_df = Differences(self.personal_df, self.sql_df)
+
+class Sql_base():
+
+    PATH_EXCEL = r"M:\BOLSA\Victor\Inputs.xlsx"
+    SHEET_EXCEL = "Funds"
+    def __init__(self):
+        self.build_engine()
+        self.obtain_yesterday()
+        self.funds_to_query()
+        self.build_query()
+        self.obtain_base()
+
+    def build_engine(self):
+        conn_str_1 = 'DRIVER={SQL Server};SERVER=sqlquest01;DATABASE=RISCO_SHARED;UID=RiscoUser;PWD=@AZQuest75815.'
+        conn_url_1 = URL.create("mssql+pyodbc", query={"odbc_connect": conn_str_1})
+        self.engine_RISCO_SHARED = create_engine(conn_url_1)
+
+    def obtain_yesterday(self):
+        query_yesterday = """
+        Select 
+            Top 1 DataCorrente 
+        From
+            Risco..Datas (Nolock)
+        Where
+            DataCorrente<Convert(Date, GetDate())
+            And FinalDeSemana=0
+            And Feriado=0
+        Order By
+            DataCorrente Desc
+        """
+        df = pd.read_sql(query_yesterday, self.engine_RISCO_SHARED)
+        self.yesterday = df.loc[0, "DataCorrente"]
+
+    def funds_to_query(self):
+        df_funds = pl.read_excel(
+                self.PATH_EXCEL, sheet_name=self.SHEET_EXCEL
+                ).lazy()
+        df_funds = df_funds.filter(
+                (pl.col("get_data") == True)
+                &
+                (~pl.col("cnpj").is_null())
+                ).collect()
+        self.funds_string = "('" + df_funds.select(
+                pl.col("name").str.concat("', '")
+                )[0, 0] + "')"
+
+    def build_query(self):
+        self.query_db = """
+        SELECT
+            convert(datetime,Data, 103) as data,
+            MERCADORIA,
+            CARTEIRA as fund,
+            PAPEL as ticker,
+            SUM(QTDE) as quantity,
+            SUBSTRATEGY as substrategy,
+            SUM(Financeiro) as financial_volume
+        FROM
+            vw_Posicoes_Fundos('""" + self.yesterday + """')
+        WHERE
+            CARTEIRA IN {}
+        GROUP BY
+            data,
+            MERCADORIA,
+            CARTEIRA,
+            PAPEL,
+            SUBSTRATEGY
+        ORDER BY
+            CARTEIRA
+        """.format(self.funds_string)
+
+    def obtain_base(self):
+        print("Querying sql base")
+        pandas_df = pd.read_sql(self.query_db, self.engine_RISCO_SHARED)
+        self.df = pl.from_pandas(pandas_df)
+
+class Personal_base():
+
+    def __init__(self):
+        self.obtain_base()
+        self.obtain_trades()
+        self.join_dfs()
+
+    def obtain_base(self):
+        self.df_personal_base = pl.read_parquet(
+                r"M:\BOLSA\Victor\Routines_files"
+                r"\Personal_base\personal_db.parquet"
+                )
+
+    def obtain_trades(self):
+        df_trade = pl.read_csv(r"M:\BOLSA\Victor\Trades_MP.txt", separator="\t")
+        number_trade_dates = df_trade.select(pl.col("T_Date")).unique().shape[0]
+        if number_trade_dates > 1:
+            raise Exception("Muitos dias")
+        df_trade = df_trade.select(pl.col(["F_ID", "Sec_ID", "Qty"]))
+        df_trade = df_trade.rename(
+                {"F_ID": "fund", "Sec_ID": "ticker", "Qty": "quantity"}
+                )
+        df_trade.filter(pl.col("quantity") != 0)
+        df_trade = df_trade.with_columns(pl.col("quantity").cast(pl.Float32))
+
+        self.df_trade = df_trade.groupby(["fund", "ticker"]).agg(
+            pl.col("quantity").sum()
+        )
+
+    def join_dfs(self):
+        self.df = self.df_personal_base.join(
+                self.df_trade, on=["fund", "ticker"], how="outer"
+                )
+
+        self.df = self.df.with_columns(
+                self.df.select(
+                    pl.col(["quantity", "quantity_right"])
+                    ).sum(axis=1).alias("quantity")
+                ).drop("quantity_right")
+
+class Differences():
+
+    def __init__(self, df_personal, df_sql):
+        self.df_personal = df_personal
+        self.check_differences(df_sql)
+        self.update_base()
+
+    def check_differences(self, df_sql):
+        self.df_personal = self.df_personal.groupby(["fund", "ticker"]).agg(
+                pl.col("quantity").sum().round(2)
+                )
+        df_sql = df_sql.groupby(["fund", "ticker"]).agg(
+                pl.col("quantity").sum().round(2)
+                )
+        df_joined = self.df_personal.join(
+                df_sql, on=["fund", "ticker"], how="outer", suffix="_sql"
+                ).fill_null(0)
+        self.errors = df_joined.filter(pl.col("quantity")
+                                      != pl.col("quantity_sql"))
+
+    def update_base(self):
+        if self.errors.is_empty():
+            print("Sem diferencas")
+            self.df_personal.write_parquet(
+                r"M:\BOLSA\Victor\Routines_files"
+                r"\Personal_base\personal_db.parquet"
+            )
+        else:
+            print(self.errors)
+            pass
+
+m = Main()
+
+
+# Literatura estrangeira nem sempre pode ser aplicada aqui. Exemplos de motivos: 1) notação DU/252 para juros interbancário, 2) utilização de PTAX no vencimento de derivativos cambiais, 3) existência do mercado de casado para negociar o dólar à vista, concentrando liquidez no dólar futuro (devido a burocracia e controle das operações, essa foi uma transição que foi acontecendo ao longo do tempo para o mercado de câmbio, o que se transformou nessa liquidez do câmbio futuro)
+# 
+# Características mais importantes do mercado atual: 1) não conversibilidade da moeda, 2) existência de dois mercados para negociação do dólar à vista
+import re
+import requests
+import polars as pl
+from numpy import busday_count
+from datetime import datetime
+from scipy.interpolate import CubicSpline
+
+from day_counter.counter import Counter
+a = Counter()
+FUTURE_MEETINGS = [
+        "02/08/2023",
+        "20/09/2023",
+        "01/11/2023",
+        "13/12/2023",
+        "31/01/2024",
+        "20/03/2024",
+        "08/05/2024",
+        "19/06/2024",
+        "31/07/2024",
+        "18/09/2024",
+        "06/11/2024",
+        "11/12/2024",
+        ]
+
+class Business_days():
+
+    HOLIDAY_PATH = (r"T:\Mesa Operacoes\Credito\Narizinho\Codigos" +
+                      r"\Feriados anbima\holidays_b3.feather")
+    def __init__(self):
+        self.get_holidays()
+
+    def get_holidays(self):
+        holidays_b3 = pl.read_ipc(self.HOLIDAY_PATH)
+        holidays_b3 = holidays_b3.select(pl.col("Data").cast(pl.Date))
+        self.holidays_numpy = holidays_b3[:, 0].to_numpy()
+
+    def obtain_business_days(self, start, end, weekend=False):
+        valid_days = "Mon Tue Wed Thu Fri"
+        if weekend:
+            valid_days += " Sat Sun"
+        if type(start) == datetime:
+            start_string = start.strftime("%Y-%m-%d")
+        elif type(start) == str:
+            start_string = start
+        else:
+            raise Personal_exception(
+                    "Tentou obter dias úteis sem ser por string ou datetime")
+        if type(end) == datetime:
+            end_string = end.strftime("%Y-%m-%d")
+        elif type(end) == str:
+            end_string = end
+        else:
+            raise Personal_exception(
+                    "Tentou obter dias úteis sem ser por string ou datetime")
+
+        return busday_count(
+                start_string, end_string, holidays=self.holidays_numpy,
+                weekmask=valid_days
+                )
+
+class B3_settle_prices():
+
+    DICT_MONTH = {
+            "F": "01", "G": "02", "H": "03", "J": "04", "K": "05", "M": "06",
+            "N": "07", "Q": "08", "U": "09", "V": "10", "X": "11", "Z": "12"}
+    URL = "https://www2.bmf.com.br/pages/portal/bmfbovespa/boletim1/Ajustes1.asp"
+
+    def __init__(self):
+        self.get_info_b3()
+
+    def get_info_b3(self):
+        r = requests.get(self.URL)
+        if r.status_code != 200:
+            raise Personal_exception(
+                    "Não foi possível obter os dados do site da B3")
+        self.text = r.text
+
+    def adjust_text(self, start_text, end_text):
+        position_start = self.text.find(start_text)
+        self.cut_text = self.text[position_start:]
+        position_end = self.cut_text.find(end_text)
+        self.cut_text = self.cut_text[:position_end]
+
+    def filter_di(self):
+        self.adjust_text("DI de 1 dia", "Dólar comercial")
+        self.create_df()
+        #add copom dates
+        self.get_business_days()
+
+    def filter_dol(self):
+        self.adjust_text("Dólar comercial", "Contrato Futuro de")
+        self.create_df()
+        self.get_consecutive_days()
+
+    def filter_ddi(self):
+        self.adjust_text("DDI ", "DI de 1 dia")
+        self.create_df()
+        self.get_consecutive_days()
+
+    def filter_frc(self):
+        self.adjust_text("FRA de cupom", "FRA de Cupom")
+        self.create_df()
+        self.get_consecutive_days()
+        
+
+    def create_df(self):
+        new_separator = re.sub("\<.*?\>|\r\n", ";", self.cut_text)
+        splitted_text = new_separator.split(";")
+        dict_df = {"tickers": splitted_text[3::23],
+                   "settle": splitted_text[9::23]}
+
+        self.df = pl.DataFrame(dict_df)
+        self.format_df()
+
+    def format_df(self):
+        self.df = self.df.with_columns(
+                pl.col("tickers").str.strip(),
+                pl.col("settle").str.replace("\.", "")
+                .str.replace(",", ".").cast(pl.Float32)
+                )
+
+        self.df = self.df.with_columns(
+                (
+                    pl.col("tickers").str.slice(0, 1).map_dict(self.DICT_MONTH)
+                    .alias("maturity")
+                    + "-" 
+                    + pl.col("tickers").str.slice(1, 2)
+                    ).str.strptime(pl.Date, "%m-%y")
+                )
+
+    def get_business_days(self):
+        self.days = Business_days()
+        self.df = self.df.with_columns(
+                pl.col("maturity").dt.strftime("%Y-%m-%d").alias("business_days")
+                )
+        self.df = self.df.with_columns(
+                pl.col("business_days")
+                .apply(lambda x: self.days
+                       .obtain_business_days(datetime.today(), x) + 1)
+                .alias("business_days")
+                )
+
+    def get_consecutive_days(self):
+        self.days = Business_days()
+        self.df = self.df.with_columns(
+                pl.col("maturity").dt.strftime("%Y-%m-%d")
+                .alias("consecutive_days")
+                )
+        self.df = self.df.with_columns(
+                pl.col("consecutive_days")
+                .apply(lambda x: self.days.obtain_business_days(
+                    datetime.today(), x, weekend=True) + 1
+                       )
+                .alias("consecutive_days")
+                )
+
+class Yield_br_curve():
+
+    '''Notation in brazil for yield is in business days'''
+
+    def __init__(self, df):
+        self.df = df
+        self.rates_di()
+        self.create_forward_curve()
+
+    def rates_di(self):
+        self.df = self.df.with_columns(
+                ((1e5/pl.col("settle"))**(252/pl.col("business_days")))
+                .alias("spot_rate")
+                )
+
+        self.df = self.df.with_columns(
+                (((pl.col("spot_rate"))**(
+                    pl.col("business_days")/252
+                    )
+                 /
+                 (pl.col("spot_rate").shift(1))**(
+                     pl.col("business_days").shift(1)/252
+                     )
+                 )**(252/(
+                     pl.col("business_days")
+                     -
+                     pl.col("business_days").shift(1))
+                     )
+                 )
+                .alias("forward_rate")
+                )
+        self.df[0,"forward_rate"]= self.df[0, "spot_rate"]
+
+    def create_forward_curve(self):
+        x_di = self.df.select(pl.col("business_days"))[:, 0].to_numpy()
+        y_di = self.df.select(pl.col("forward_rate"))[:, 0].to_numpy()
+        self.di_curve = CubicSpline(x_di, y_di)
+
+    def generic_rate_di(self, date=None, business_days=None):
+        if date is not None:
+            self.business_days = Business_days().obtain_business_days(
+                    datetime.today(), date)
+        if business_days is not None:
+            self.business_days = business_days
+
+        self.forward_rate = self.di_curve(self.business_days)
+        self.spot_rate = self.spot_rate_generic_day()
+        return f"spot = {self.spot_rate}, forward = {self.forward_rate}"
+
+        raise Personal_exception(
+                "Incluir uma data(YYYY-MM-DD) ou a quantidade de dias úteis")
+
+    def spot_rate_generic_day():
+        filtered_df = self.df.filter(
+                pl.col("business_days") == self.business_days
+                )
+        if filtered_df.is_empty():
+            closest_date = self.df.filter(
+                    (pl.col("business_days") - self.business_days)
+                    .abs().min()
+                    ) 
+            business_days2 = closest_date.select(pl.col("business_days")) 
+            spot_rate2 = closest_date.select(pl.col("spot_rate")) 
+            spot_rate = self.forward_rate**(
+                    (business_days2 - self.business_days)/self.business_days
+                    )*(spot_rate2**(business_days2 / self.business_days))
+
+        else:
+            filtered_df.select(pl.col("spot_rate"))
+
+class Cupom_cambial():
+#bbg ticker - ucq (dollar future), casado currency
+#cupom cambial notation is in calendar days
+    def __init__(self, df_future):
+        self.df_future = df_future
+        self.casado = 20 #adjust to dynamically obtain a value
+
+    def first_cupom_cambial(self):
+        self.spot = self.df_future[0, "settle"] - self.casado
+        cc = 360/dc*(self.spot/self.df_future[0, "settle"]*((1 + di)**(du/252)) - 1)
+
+    def obtain_cupom_cambial(self):
+        pass
+
+class Dollar_future():
+
+    def __init__(self, df):
+        self.df = df
+
+class Frc():
+
+    def __init__(self, df):
+        self.df = df
+
+class Personal_exception(Exception):
+
+    def __init__(self, error_msg):
+        print(error_msg)
+
+
+if __name__ == "__main__":
+    settle = B3_settle_prices()
+    settle.filter_di()
+    di = Yield_br_curve(settle.df)
+    settle.filter_dol()
+    dol_future = Dollar_future(settle.df)
+    settle.filter_frc()
+    frc = Frc(settle.df)
+
+    parameters_cupom_cambial = {
+            first_di = di[0, "spot_rate"]
+            first_dol_future = dol_future[0, "settle"]
+            frc = frc.df
+            }
+    cc = Cupom_cambial(parameters_cupom_cambial)
+    print(di.df)
+
+# Obter di da bbv: blp.bdp(di.iloc[:,0].to_list(),["PX_BID","PX_ASK","BID_SIZE","ASK_SIZE","BID_CHANGE","px_volume","last_price","last_trade","last_update_dt"])
+
+import polars as pl
+from numpy import busday_count
+from datetime import datetime
+from datetime import time
+from bcb import sgs
+import requests
+import re
+from scipy.interpolate import CubicSpline
+import xlwings as xw
+
+class Main():
+
+    def __init__(self):
+        self.inputs = Inputs()
+        self.call_correct_class()
+ #       self.test_values()
+
+    def call_correct_class(self):
+        if self.inputs.index == "PRÉ":
+            self.lf = Fixed_rate(self.inputs)
+        if self.inputs.index == "CDI +":
+            self.lf = Cdi_spread(self.inputs)
+        if self.inputs.index == "CDI %":
+            self.lf = Cdi_percent(self.inputs)
+
+    def test_values(self):
+        b = Yield_curve()
+
+class Inputs():
+
+    WB_NAME = "infos credito privado.xlsm"
+    SHEET_NAME = "PU LF"
+    RANGE = "C2:C10"
+    
+    def __init__(self):
+        #self.obtain_inputs()
+        self.obtain_inputs2()
+        self.adjust_dates()
+        self.check_liquidation()
+
+    def obtain_inputs2(self):
+        self.index = "CDI +"
+        self.issue_date = "24/05/2021"
+        self.maturity_date = "24/05/2024"
+        self.liquidation_date = "15/08/2023"
+        self.issue_rate = 0.0117
+        self.deal_rate = 0.011
+        self.issuance_par_value = 1000
+        self.last_coupon = "24/05/2023"
+        self.coupon_frequency = 6
+
+    def obtain_inputs(self):
+        self.wb = xw.Book(self.WB_NAME)
+        self.sheet = self.wb.sheets[self.SHEET_NAME]
+        inputs = self.sheet.range(self.RANGE).value
+        self.index = inputs[0].upper()
+        self.issue_date = inputs[1]
+        self.maturity_date = inputs[2]
+        self.liquidation_date = inputs[3]
+        self.issue_rate = inputs[4]
+        self.deal_rate = inputs[5]
+        self.issuance_par_value = inputs[6]
+        self.last_coupon = inputs[7]
+        self.coupon_frequency = inputs[8]
+
+    def adjust_dates(self):
+        if type(self.issue_date) == str:
+            self.issue_date = datetime.strptime(self.issue_date, "%d/%m/%Y")
+        if type(self.maturity_date) == str:
+            self.maturity_date = datetime.strptime(self.maturity_date, "%d/%m/%Y")
+        if type(self.liquidation_date) == str:
+            self.liquidation_date = datetime.strptime(self.liquidation_date, "%d/%m/%Y")
+        if self.last_coupon != "" and (type(self.last_coupon) == str):
+            self.last_coupon = datetime.strptime(self.last_coupon, "%d/%m/%Y")
+
+    def check_liquidation(self):
+        if self.liquidation_date < datetime.combine(datetime.today(), time.min):
+            raise Personal_exception("Liquidação passada não suportada")
+
+class Counter_days():
+
+    #HOLIDAY_PATH = (r"T:\Mesa Operacoes\Credito\Narizinho\Codigos" +
+    #                 r"\Feriados anbima\holidays_b3.feather")
+    HOLIDAY_PATH = (r"C:\Victor\codes\holidays_b3.feather")
+    def __init__(self):
+        self.get_holidays()
+
+    def get_holidays(self):
+        holidays_b3 = pl.read_ipc(self.HOLIDAY_PATH)
+        holidays_b3 = holidays_b3.select(pl.col("Data").cast(pl.Date))
+        self.holidays_numpy = holidays_b3[:, 0].to_numpy()
+
+    def count_days(self, start, end, business_days=True):
+        start_string = self.test_date(start)
+        end_string = self.test_date(end)
+        if business_days:
+            valid_days = "Mon Tue Wed Thu Fri"
+            return busday_count(
+                start_string, end_string, holidays=self.holidays_numpy,
+                weekmask=valid_days
+                )
+        else:
+            valid_days = "Mon Tue Wed Thu Fri Sat Sun"
+            return busday_count(start_string, end_string)
+
+    def test_date(self, date):
+        if type(date) == datetime:
+            return date.strftime("%Y-%m-%d")
+        elif type(date) == str:
+            if date[4] != "-" or int(date[5:7]) < 0 or int(date[5:7]) > 12:
+                raise Personal_exception("Data em formato errado, deve ser: "
+                                         + "aaaa-mm-dd")
+            return date
+        else:
+            raise Personal_exception(
+                    "Tentou obter dias úteis sem ser por string ou datetime")
+
+class Yield_curve():
+
+    '''Notation in brazil for yield is in business days'''
+
+    DICT_MONTH = {
+            "F": "01", "G": "02", "H": "03", "J": "04", "K": "05", "M": "06",
+            "N": "07", "Q": "08", "U": "09", "V": "10", "X": "11", "Z": "12"}
+    URL = "https://www2.bmf.com.br/pages/portal/bmfbovespa/boletim1/Ajustes1.asp"
+
+    def __init__(self):
+        self.get_info_b3()
+        self.adjust_text("DI de 1 dia", "Dólar comercial")
+        self.create_df()
+        self.get_business_days()
+        self.rates_di()
+
+    def get_info_b3(self):
+        r = requests.get(self.URL)
+        if r.status_code != 200:
+            raise Personal_exception(
+                    "Não foi possível obter os dados do site da B3")
+        self.text = r.text
+
+    def adjust_text(self, start_text, end_text):
+        position_start = self.text.find(start_text)
+        self.cut_text = self.text[position_start:]
+        position_end = self.cut_text.find(end_text)
+        self.cut_text = self.cut_text[:position_end]
+
+    def create_df(self):
+        new_separator = re.sub("\<.*?\>|\r\n", ";", self.cut_text)
+        splitted_text = new_separator.split(";")
+        dict_df = {"tickers": splitted_text[3::23],
+                   "settle": splitted_text[9::23]}
+
+        self.df = pl.DataFrame(dict_df)
+        self.format_df()
+
+    def format_df(self):
+        self.df = self.df.with_columns(
+                pl.col("tickers").str.strip(),
+                pl.col("settle").str.replace("\.", "")
+                .str.replace(",", ".").cast(pl.Float32)
+                )
+
+        self.df = self.df.with_columns(
+                    (pl.col("tickers").str.slice(0, 1).map_dict(self.DICT_MONTH)
+                    .alias("maturity")
+                    + "-" 
+                    + pl.col("tickers").str.slice(1, 2)
+                    ).str.strptime(pl.Date, "%m-%y")
+                )
+
+    def get_business_days(self):
+        self.days = Counter_days().count_days
+        self.df = self.df.with_columns(
+                pl.col("maturity").dt.strftime("%Y-%m-%d").alias("business_days")
+                )
+        self.df = self.df.with_columns(
+                pl.col("business_days")
+                .apply(lambda x: self.days(datetime.today(), x) + 1)
+                .alias("business_days")
+                )
+
+    def rates_di(self):
+        self.df = self.df.with_columns(
+                ((1e5/pl.col("settle"))**(252/pl.col("business_days")))
+                .alias("spot_rate")
+                )
+
+        self.df = self.df.with_columns(
+                (((pl.col("spot_rate"))**(
+                    pl.col("business_days")/252
+                    )
+                 /
+                 (pl.col("spot_rate").shift(1))**(
+                     pl.col("business_days").shift(1)/252
+                     )
+                 )**(252/(
+                     pl.col("business_days")
+                     -
+                     pl.col("business_days").shift(1))
+                     )
+                 )
+                .alias("forward_rate")
+                )
+        self.df[0,"forward_rate"]= self.df[0, "spot_rate"]
+
+    def create_forward_curve(self):
+        x_di = self.df.select(pl.col("business_days"))[:, 0].to_numpy()
+        y_di = self.df.select(pl.col("forward_rate"))[:, 0].to_numpy()
+        self.di_curve = CubicSpline(x_di, y_di)
+
+    def generic_date_di(self, date=None, business_days=None):
+        if date is not None:
+            self.business_days = Counter_days().count_days(
+                    datetime.today(), date)
+        if business_days is not None:
+            self.business_days = business_days
+        else:
+            raise Personal_exception(
+                "Incluir uma data(YYYY-MM-DD), datetime ou a quantidade de dias úteis")
+
+        self.forward_rate = self.di_curve(self.business_days)
+        self.spot_rate_generic_day3()
+        print(f"spot = {self.spot_rate}, forward = {self.forward_rate}")
+        return self.spot_rate
+
+    def spot_rate_generic_day(self):
+        print("entrou")
+        self.business_days = 207
+        filtered_df = self.df.filter(
+                pl.col("business_days") == self.business_days
+                )
+        if filtered_df.is_empty():
+            closest_date = self.df.filter(
+                    (pl.col("business_days") - self.business_days).abs()
+                    ==
+                    (pl.col("business_days") - self.business_days)
+                    .abs().min()
+                    ) 
+            business_days2 = closest_date.select(pl.col("business_days"))[0, 0]
+            spot_rate2 = closest_date.select(pl.col("spot_rate"))[0, 0]
+            self.spot_rate = (spot_rate2**(business_days2/self.business_days)
+                    /(self.forward_rate**(
+                    (business_days2 - self.business_days)/self.business_days
+                    ))
+             )
+        else:
+            self.spot_rate = filtered_df.select(pl.col("spot_rate"))[0, 0]
+
+    def spot_rate_generic_day2(self):
+        filtered_df = self.df.filter(
+                pl.col("business_days") == self.business_days
+                )
+        print("entrou2")
+        if filtered_df.is_empty():
+            self.df = self.df.with_columns(
+                    (pl.col("business_days") - self.business_days)
+                    .alias("relative_business_days")
+                    ) 
+            previous_df = self.df.filter(
+                    (pl.col("relative_business_days") > 0)
+                    ).filter(
+                    (pl.col("relative_business_days")
+                     == pl.col("relative_business_days").min()
+                     )
+                    )
+            later_df = self.df.filter(
+                    (pl.col("relative_business_days") < 0)
+                    ).filter(
+                    (pl.col("relative_business_days")
+                     == pl.col("relative_business_days").max()
+                     )
+                    )
+            previous_business_days = previous_df.select(pl.col("business_days"))[0, 0]
+            previous_spot_rate = previous_df.select(pl.col("spot_rate"))[0, 0]
+            later_business_days = later_df.select(pl.col("business_days"))[0, 0]
+            later_spot_rate = later_df.select(pl.col("spot_rate"))[0, 0]
+            self.spot_rate = (previous_spot_rate
+                              *((later_spot_rate/previous_spot_rate)
+                                **((self.business_days - previous_business_days)
+                                   /(later_business_days - previous_business_days))
+                                   )
+                              )
+            print(self.spot_rate)
+        else:
+            self.spot_rate = filtered_df.select(pl.col("spot_rate"))[0, 0]
+            print(self.spot_rate)
+
+    def spot_rate_generic_day3(self, business_days):
+        filtered_df = self.df.filter(
+                pl.col("business_days") == business_days
+                )
+        if filtered_df.is_empty():
+            self.df = self.df.with_columns(
+                    (pl.col("business_days") - business_days)
+                    .alias("relative_business_days")
+                    ) 
+            previous_df = self.df.filter(
+                    (pl.col("relative_business_days") > 0)
+                    ).filter(
+                    (pl.col("relative_business_days")
+                     == pl.col("relative_business_days").min()
+                     )
+                    )
+            later_df = self.df.filter(
+                    (pl.col("relative_business_days") < 0)
+                    ).filter(
+                    (pl.col("relative_business_days")
+                     == pl.col("relative_business_days").max()
+                     )
+                    )
+            previous_business_days = previous_df.select(pl.col("business_days"))[0, 0]
+            previous_spot_rate = previous_df.select(pl.col("spot_rate"))[0, 0]
+            later_business_days = later_df.select(pl.col("business_days"))[0, 0]
+            later_spot_rate = later_df.select(pl.col("spot_rate"))[0, 0]
+            self.spot_rate = ((previous_spot_rate**(previous_business_days/business_days))
+                              *(((later_spot_rate**(later_business_days/business_days))
+                                 /(previous_spot_rate**((previous_business_days/business_days))))
+                                **((business_days - previous_business_days)
+                                   /(later_business_days - previous_business_days))
+                                   )
+                              )
+            print(f"bu: {business_days}, di: {self.spot_rate}")
+        else:
+            self.spot_rate = filtered_df.select(pl.col("spot_rate"))[0, 0]
+            print(f"bu: {business_days}, di: {self.spot_rate}")
+
+class Personal_exception(Exception):
+
+    def __init__(self, error_msg):
+        print(error_msg)
+
+class Cdi_spread():
+
+    '''Rounding rules following b3'''
+
+    def __init__(self, i):
+        self.inputs = i
+        self.counter = Counter_days().count_days
+        self.adjust_coupon_dates()
+        self.obtain_cdi_accrued()
+        self.calc_current_par_value()
+        self.calc_coupon_values()
+        self.calc_price()
+
+    def adjust_coupon_dates(self):
+        self.next_coupon = self.inputs.last_coupon
+        if self.inputs.last_coupon == "":
+            self.start_date = self.inputs.issue_date.strftime("%Y-%m-%d")
+        elif self.inputs.last_coupon > self.inputs.liquidation_date:
+            self.start_date = self.inputs.issue_date.strftime("%Y-%m-%d")
+        else:
+            while self.next_coupon < self.inputs.liquidation_date:
+                self.inputs.last_coupon = self.next_coupon
+                self.obtain_next_coupon_date()
+                print(self.next_coupon)
+            self.start_date = self.inputs.last_coupon.strftime("%Y-%m-%d")
+
+    def obtain_next_coupon_date(self):
+        m = self.next_coupon.month + self.inputs.coupon_frequency
+        y = self.next_coupon.year
+        if m > 12:
+            y += int(m//12)
+            m = m%12
+        m = int(m)
+        self.next_coupon = self.next_coupon.replace(month=m, year=y)
+
+    def obtain_cdi_accrued(self):
+        cdi = sgs.get(('cdi', 12), start = self.start_date, )
+        cdi.loc[:,"cdi_percent"] = (cdi.loc[:,"cdi"]/100 + 1)
+        self.cdi_accrued = cdi.loc[:,"cdi_percent"].product()
+        self.cdi_accrued = round(self.cdi_accrued, 8)
+        print(f"cdi acumulado: {self.cdi_accrued}")
+
+    def calc_current_par_value(self):
+        business_days_to_liquidation = self.counter(self.start_date, self.inputs.liquidation_date)
+        print(f"b.u. to liq: {business_days_to_liquidation}")
+        issue_accrued = (1 + self.inputs.issue_rate)**((business_days_to_liquidation+2)/252)
+        self.yield_factor = issue_accrued*self.cdi_accrued
+        #pu_par in portuguese
+        self.current_par_value = self.inputs.issuance_par_value*self.yield_factor 
+        self.current_par_value = round(self.current_par_value, 6)
+        print(f"pu par: {self.current_par_value}")
+
+    def calc_coupon_values(self):
+        if self.next_coupon == "":
+            return
+        self.generate_di_rate = Yield_curve().spot_rate_generic_day3
+        #first coupon
+        business_days_to_coupon = self.counter(self.inputs.liquidation_date, self.next_coupon)
+        print(f"b.u. coupon: {business_days_to_coupon}")
+        di_spot = self.generate_di_rate(business_days_to_coupon)
+        print(f"di: {di_spot}")
+        coupon_price = self.current_par_value*((di_spot*(self.inputs.issue_rate+1))**(business_days_to_coupon/252))
+        print(f"cupom futuro: {coupon_price}")
+
+    def calc_price(self):
+        business_days_liquidation_to_maturity = self.counter(self.inputs.liquidation_date, self.inputs.maturity_date)
+        print(business_days_liquidation_to_maturity)
+        yield_adjust_to_present = ((self.inputs.issue_rate + 1)/(self.inputs.deal_rate + 1))**(business_days_liquidation_to_maturity/252)
+        self.bond_price = self.current_par_value*yield_adjust_to_present
+        self.test = yield_adjust_to_present
+
+    def calc_coupons(self):
+        self.y_c = Yield_curve()
+        business_days_first_coupon = self.counter(self.inputs.liquidation_date, self.inputs.next_coupon)
+      #  calcular o pu par de verdade, que eh o cdi acumulado do ultimo do cupom
+       # ate a data de liq vezes a taxa de emissao nesse periodo
+        #esse calc eh para deb. Checar se eh o msm para LF
+
+class Fixed_rate():
+
+    def __init__(self):
+        self.calc_remaining_par_value()
+
+    def calc_remaining_par_value(self):
+        business_days_issue_to_liquidation = counter(i.issue_date, i.liquidation_date)
+        issue_accrued = (1 + i.issue_rate)**(business_days_issue_to_liquidation/252)
+        self.yield_factor = issue_accrued
+        self.remaining_par_value = i.issuance_par_value*self.yield_factor #pu_par in portuguese
+
+    def calc_price(self):
+        business_days_liquidation_to_maturity = counter(i.liquidation_date, i.maturity_date)
+        yield_adjust_to_present = ((i.issue_rate + 1)/(i.deal_rate + 1))**(business_days_liquidation_to_maturity/252)
+        self.bond_price = remaining_par_value*yield_adjust_to_present
+        self.test = yield_adjust_to_present
+
+m = Main()
+#bsa315 - di +, 0 amort
+#alga28 - di +, 1 amort
+#almc12 - di +, 3 amort
+#alsca0 - di%, 0 amort
