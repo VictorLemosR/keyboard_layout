@@ -15,7 +15,6 @@
  mov (layer-toggle movements)
  vim (layer-toggle vim_layer)
  lay (layer-toggle layers)
- ctl_qwerty (layer-toggle right_control_qwerty)
 
  ;; Didn't delete mouse layer from example, but didn't use it either
  mse (layer-toggle mouse)
@@ -89,7 +88,6 @@ cwd (macro C-(w d)) ;; decrease size of vertical window
 ;; tap-hold keys with letters for tap and layer change for hold
 spc_sft (tap-hold-release 100 200 spc @space_sft)
 spc_qrty (tap-hold-release 100 200 spc @space_qwerty)
-r_ctl (tap-hold-release 200 200 rctl @ctl_qwerty)
 t_arr (tap-hold-release 200 200 t @mov)
 n_ctl (tap-hold-release 200 160 n @ctl_func)
 n_upper (tap-hold-release 200 160 @N @ctl_func)
@@ -100,10 +98,10 @@ great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
 
     (deflayer colemak_dh_modified
      @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
-     tab    @l_par b    l    p    w       j    f     ,    u    q    x    [    ]
-     @esc_vim a     s    r @t_arr  @quote  '   @n_ctl e    i    o    k    ret
-     lsft      c     d    g    v    z       h    m     .    @under y    caps
-     lctl lmet lalt           @spc_sft            XX @r_ctl
+     tab    @l_par b    l    p     ,     x    f     .    u    @under     [    ] XX
+     @esc_vim a     s    r @t_arr  w      h   @n_ctl e    i    o    z    ret
+     lsft      c     d    g    v    k       '    m     q    y  j   caps
+     lctl lmet lalt           @spc_sft            XX     rctl
     )
 
     (deflayer qwerty
@@ -123,11 +121,11 @@ great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
     )
 
     (deflayer space_layer
-     @great  @!    @at    @#    @$    @%    @^    grv    @&    @|    \    /    @*    bspc
-     @qwe   @r_par    @B     @L     @P     @W     @J     @F    ;     @U     @Q     @X    @{    @}
-     esc  @A     @S     @R     @T     =    @~     @n_upper     @E     @I     @O     @K    ret
-     lsft @C     @D     @G     @V     @Z     @H     @M    @:    @?     @Y    rsft
-     lctl lmet lalt           spc            ralt rctl
+     @great  @?   ;    ;  grv   @%    grv    @|    @&    @|    \    /    @*    bspc
+     @qwe   @r_par    @B     @L     @P   @quote  @X          @F    @:     @U     =     @{    @} XX
+     esc  @A     @S     @R     @T     @W    @H @n_upper   @E     @I     @O     @Z    ret
+     lsft @C     @D     @G     @V     @K     @~     @M     @Q    @Y    @J   rsft
+     C-z lmet C-z           spc            ralt rctl
     )
 
     (deflayer space_layer_qwerty
@@ -142,7 +140,7 @@ great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
      _    _    _    _    _    _    _      _  _  _  _    _   _ _
      _ _ _ _       _     _    _ C-f volu  _  _ _ _ _
      _ _ _ _ bspc del    _ _  vold  _  _   _ _
-     _ _ _ _ _  _           _  _  mute  _ _  C-y 
+     _ _ _ _ _  _           _  _  mute  _ _  _ 
      _ _    _              ret              _       _
     )
 
@@ -160,13 +158,6 @@ great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
      _ C-d _ @cwz @cwd _   @cwh  @cwj   @cwk   @cwl  esc _  _
      _ _ _ @cwn @cwv _           @cwn @cwv _ _ _ _
      _    _    _               spc             _       _
-    )
-    (deflayer right_control_qwerty
-     C-grv C-1    C-2    C-3    C-4    C-5    C-6    C-7    C-8    C-9    C-0    C--     C-=    C-bspc
-     C-tab  C-q    C-w    C-e    C-r    C-t    C-y    C-u    C-i    C-o    C-p    C-[    C-]    C-\
-     C-caps C-a    C-s    C-d    C-f    C-g    C-h    C-j    C-k    C-l    C-;    C-'    C-ret
-     C-lsft C-z    C-x    C-c    C-v    C-b    C-n    C-m    C-,    C-.    C-/    C-rsft
-     C-lctl C-lmet C-lalt           C-spc            C-ralt  rctl
     )
 
     (defalias
