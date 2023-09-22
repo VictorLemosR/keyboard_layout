@@ -98,9 +98,9 @@ great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
 
     (deflayer colemak_dh_modified
      @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
-     tab    @l_par b    l    p     ,     x    f     q    u    =     [    ] XX
-     @esc_vim a     s    r @t_arr  w      '   @n_ctl e    i    o    z    ret
-     lsft      c     d    g    v    k      h    m     .    y  j   caps
+     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] XX
+     @esc_vim a     s    r @t_arr  ,      '   @n_ctl e    i    o    z    ret
+     lsft      c     d    g    v    j      h    m     .    y  x   caps
      lctl lmet lalt           @spc_sft            XX     rctl
     )
 
@@ -121,10 +121,10 @@ great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
     )
 
     (deflayer space_layer
-     @great  @?   ;    ;  grv   @%    grv    @|    @&    @|    \    /    @*    bspc
-     @qwe   @r_par    @B     @L     @P   @quote  @X          @F    @Q     @U     XX     @{    @} XX
-     =  @A     @S     @R     @T     @W    @~ @n_upper   @E     @I     @O     @Z    ret
-     lsft @C     @D     @G     @V     @K     @H     @M     @:    @Y    @J   rsft
+     @great  @!   @?    ;  grv   @%    grv    @|    @&    @|    \    /    @*    bspc
+     grv   @r_par  @B     @L    @P     @W      @K          @F    @Q     @U     XX     @{    @} XX
+     @^      @A     @S     @R     @T    =      @~ @n_upper   @E     @I     @O     @Z    ret
+     lsft    @C     @D     @G     @V     @J      @H     @M     @:    @Y    @X   rsft
      C-z lmet @under           spc            ralt rctl
     )
 
