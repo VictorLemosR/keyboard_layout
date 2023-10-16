@@ -86,19 +86,32 @@ cwz (macro C-(w z)) ;; decrease size of horizontal window
 cwd (macro C-(w d)) ;; decrease size of vertical window
 
 ;; tap-hold keys with letters for tap and layer change for hold
-spc_sft (tap-hold-release 100 200 spc @space_sft)
-spc_qrty (tap-hold-release 100 200 spc @space_qwerty)
-t_arr (tap-hold-release 200 200 t @mov)
-n_ctl (tap-hold-release 200 160 n @ctl_func)
-n_upper (tap-hold-release 200 160 @N @ctl_func)
+spc_sft (tap-hold-release 200 160 spc @space_sft)
+spc_qrty (tap-hold-release 200 160 spc @space_qwerty)
+t_arr (tap-hold-release 200 180 t @mov)
+n_ctl (tap-hold-release 200 140 n @ctl_func)
+n_upper (tap-hold-release 200 140 @N @ctl_func)
 esc_vim (tap-hold-release 200 200 esc @vim)
 great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
 .ms (tap-hold-release 200 200 . @mse)
+
+;;Mouse commands
+mwu (mwheel-up 50 120)
+mwd (mwheel-down 50 120)
+mwl (mwheel-left 50 120)
+mwr (mwheel-right 50 120)
+
+;;spc_unicode (unicode \20)
+m_click_move (macro mltp (movemouse-left 5000 50) mltp (movemouse-right 5000 50) )
+
+)
+(deflocalkeys-win
+space 32
 )
 
     (deflayer colemak_dh_modified
      @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
-     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] XX
+     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] XX ;;@spc_unicode
      @esc_vim a     s    r @t_arr  ,      '   @n_ctl e    i    o    z    ret
      lsft      c     d    g    v    j      h    m     .    y  x   caps
      lctl lmet lalt           @spc_sft            XX     rctl
@@ -138,7 +151,7 @@ great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
 
     (deflayer windows_functions ;; Holding right index
      _    _    _    _    _    _    _      _  _  _  _    _   _ _
-     _ _ _ _       _     _    _ C-f volu  _  _ _ _ _
+     _ _ _ _       _     _    _ _ volu  _  _ _ _ _
      _ _ _ _ bspc del    _ _  vold  _  _   _ _
      _ _ _ _ _  _           _  _  mute  _ _  _ 
      _ _    _              ret              _       _
@@ -148,23 +161,16 @@ great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
      _ _ _   _   _   _   _   _   _   _   _  _  _ _
      _ C-S-t C-w C-t   f5    _    C-d C-u home  end    _ _ _ _
      _ C-S-n C-S-tab C-tab _    _    left down up rght   esc _  _
-     lsft _     mlft  _ _   _    C-left C-down C-up C-rght  _ _
+     lsft _ @m_click_move  _ _   _    C-S-left C-S-down C-S-up C-S-rght  _ _
      _    _    _               ret             _       _
     )
 
     (deflayer vim_layer ;; Holding caps key in default position
      _     _   _   _   _   _   _   _   _   _   _   _   _  _
-     _ C-u @cwq @cwx @cwi    _    y  u   i   o p   _ _    _
+     @mwu C-u @cwq @cwx @cwi    _    y  u   i   o p   _ _    _
      _ C-d _ @cwz @cwd _   @cwh  @cwj   @cwk   @cwl  esc _  _
-     _ _ _ @cwn @cwv _           @cwn @cwv _ _ _ _
+     @mwd @mwl @mwr @cwn @cwv _           @cwn @cwv _ _ _ _
      _    _    _               spc             _       _
-    )
-
-    (defalias
-     mwu (mwheel-up 50 120)
-     mwd (mwheel-down 50 120)
-     mwl (mwheel-left 50 120)
-     mwr (mwheel-right 50 120)
     )
 
     (deflayer mouse
