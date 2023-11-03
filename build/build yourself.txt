@@ -1,0 +1,5 @@
+You can see at kanata's page on how to do it as well
+Adjust test.bat to open inside ...\build\kanata
+Open test.bat
+send cargo build --release
+copy .exe from ...\build\kanata\target\release\kanata.exe to wherever
