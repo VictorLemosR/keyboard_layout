@@ -1,0 +1,1 @@
+C:\\Victor\\programs\\Kanata\\kanata_print.exe --cfg C:\\Victor\\programs\\Kanata\\cfg.kbd

@@ -111,7 +111,7 @@ space 32
 
     (deflayer colemak_dh_modified
      @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
-     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] spc
+     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] calc
      @esc_vim a     s    r @t_arr  ,      '   @n_ctl e    i    o    z    ret
      lsft      c     d    g    v    j      h    m     .    y  x   caps up
      lctl lmet lalt           @spc_sft            XX     rctl left down rght
