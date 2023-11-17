@@ -95,25 +95,30 @@ esc_vim (tap-hold-release 200 200 esc @vim)
 great (tap-hold-release 200 200 @greater @lay) ;; switch for < after
 .ms (tap-hold-release 200 200 . @mse)
 
+;; Caps for just one word
+single_caps (caps-word-custom
+        2000 ;;Time to turn it off, if idle
+        ;;keys to apply shift
+        (a b c d e f g h i j k l m n o p q r s t u v w x y z)
+        ;;keys to not apply shift and not terminate behaviour
+        (kp0 kp1 kp2 kp3 kp4 kp5 kp6 kp7 kp8 kp9 bspc del left rght 0 1 2 3 4 5 6 7 8 9)
+        )
+
 ;;Mouse commands
 mwu (mwheel-up 50 120)
 mwd (mwheel-down 50 120)
 mwl (mwheel-left 50 120)
 mwr (mwheel-right 50 120)
 
-;;spc_unicode (unicode \20)
 m_click_move (macro mltp (movemouse-left 5000 50) mltp (movemouse-right 5000 50) )
 
-)
-(deflocalkeys-win
-space 32
 )
 
     (deflayer colemak_dh_modified
      @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
-     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] calc
+     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] caps
      @esc_vim a     s    r @t_arr  ,      '   @n_ctl e    i    o    z    ret
-     lsft      c     d    g    v    j      h    m     .    y  x   caps up
+     lsft      c     d    g    v    j      h    m     .    y  x   @single_caps up
      lctl lmet lalt           @spc_sft            XX     rctl left down rght
     )
 
@@ -184,5 +189,5 @@ space 32
     (defcfg
      process-unmapped-keys yes ;; Uncomment for being able to press keys not present in defsrc
      log-layer-changes no
-     windows-altgr add-lctl-release
+     ;; windows-altgr add-lctl-release
     )
