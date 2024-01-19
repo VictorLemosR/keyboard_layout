@@ -101,7 +101,7 @@ single_caps (caps-word-custom
         ;;keys to apply shift
         (a b c d e f g h i j k l m n o p q r s t u v w x y z)
         ;;keys to not apply shift and not terminate behaviour
-        (kp0 kp1 kp2 kp3 kp4 kp5 kp6 kp7 kp8 kp9 bspc del left rght 0 1 2 3 4 5 6 7 8 9)
+        (kp0 kp1 kp2 kp3 kp4 kp5 kp6 kp7 kp8 kp9 bspc del left rght 0 1 2 3 4 5 6 7 8 9 - lsft ')
         )
 
 ;;Mouse commands
