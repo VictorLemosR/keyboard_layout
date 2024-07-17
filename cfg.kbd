@@ -80,7 +80,7 @@ Z S-z
 0 0
 
 ;; rename some vim commands
-cwn (macro C-(w n)) ;; create new horizontal window
+cws (macro C-(w s)) ;; create new horizontal window
 cwv (macro C-(w v)) ;; create new vertical window
 cwh (macro C-(w h)) ;; move to left window
 cwj (macro C-(w j)) ;; move to below window
@@ -189,14 +189,14 @@ m_down_middle (macro (movemouse-down 3000 50) mmtp )
      XX C-S-t C-w C-t   f5 @translate_page    XX C-left C-rght XX XX XX XX XX
      XX C-S-n C-S-tab C-tab XX    XX    left down up rght   XX XX  XX
      lsft XX @m_click_move  XX @m_down_middle   XX   XX C-S-left C-S-rght XX XX XX XX
-     XX    XX    lalt               ret             XX       XX XX XX XX
+     _    XX    lalt               ret             XX       XX XX XX XX
     )
 
     (deflayer vim_layer ;; Holding caps key in default position
      _     _   _   _   _   _   _   _   _   _   _   _   _  _
      @mwu C-u @cwq @cwx @cwi    _  _ _ + = @greater _ _    _
      _ C-d _ @cwz @cwd _   @cwh  @cwj   @cwk   @cwl  _ _  _
-     @mwd @mwl @mwr @cwn @cwv _           _ _ _ _ _ _ _
+     @mwd @mwl @mwr @cws @cwv _           _ _ _ _ _ _ _
      _    _    _               spc             _       _ _ _ _
     )
 
