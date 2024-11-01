@@ -1,2 +1,2 @@
-kanata --cfg C:\\Victor\\programs\\Kanata\\cfg.kbd
+%~dp0kanata --cfg "%~dp0cfg.kbd"
 pause

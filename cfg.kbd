@@ -106,7 +106,7 @@ ccc (macro C-(c c))
 ;; tap-hold keys with letters for tap and layer change for hold
 ;; Change hold_timeout in case a key is activating too fast or too slow
 
-spc_sft (tap-hold-release $tap_timeout $hold_timeout spc @space_sft)
+spc_sft (tap-hold-release 220 200 spc @space_sft)
 spc_qrty (tap-hold-release $tap_timeout $hold_timeout spc @space_qwerty)
 t_key (tap-hold-release $tap_timeout $hold_timeout t @mov)
 n_key (tap-hold-release $tap_timeout $hold_timeout n @ctl_func) ;;
@@ -154,7 +154,7 @@ m_down_middle (macro (movemouse-down 3000 50) mmtp )
 
     (deflayer space_layer
      @great  @!   @?    XX  grv   @%    grv    @|    @&    @|    \    /    @*    bspc
-     @qwe   @r_par  @B     @L    @P     @W      @K          @F    @Q     @U     XX     @{    @} lrld
+     @qwe   @r_par  @B     @L    @P     @W      @K          @F    @Q     @U     =     @{    @} lrld
      @^      @A     @S     @R     @T    ;      @~ @n_key_upper   @E     @I     @O     @Z    ret
      grv    @C     @D     @G     @V     @J      @H     @M     @:    @Y    @X   rsft _
      C-z lmet @under           spc            ralt rctl _ _ _
