@@ -1,0 +1,220 @@
+(defsrc
+ grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+ tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+ caps a    s    d    f    g    h    j    k    l    ;    '    ret
+ lsft z    x    c    v    b    n    m    ,    .    /    rsft up
+ lctl lmet lalt           spc            ralt rctl left down rght
+ )
+
+(defvar
+tap_timeout 200
+hold_timeout 180
+)
+
+(defalias
+ ;; this is a comment
+ ;; toggle layer aliases
+ space_sft (layer-toggle space_layer)
+ space_qwerty (layer-toggle space_layer_qwerty)
+ ctl_func (layer-toggle windows_functions)
+ mov (layer-toggle movements)
+ vim (layer-toggle vim_layer)
+ lay (layer-toggle layers)
+
+ ;; Didn't delete mouse layer from example, but didn't use it either
+ mse (layer-toggle mouse)
+
+ ;; change the base layer between colemak and qwerty
+ cole (layer-switch colemak_dh_modified)
+ qwe (layer-switch qwerty)
+
+ ;; shifted keys
+quote S-'
+l_par S-9
+r_par S-0
+less S-,
+greater S-.
+! S-1
+at S-2
+# S-3
+$ S-4
+% S-5
+^ S-6
+& S-7
+* S-8
+under S--
++ S-=
+| S-\
+? S-/
+~ S-`
+: S-;
+{ S-[
+} S-]
+A S-a
+B S-b
+C S-c
+D S-d
+E S-e
+F S-f
+G S-g
+H S-h
+I S-i
+J S-j
+K S-k
+L S-l
+M S-m
+N S-n
+O S-o
+P S-p
+Q S-q
+R S-r
+S S-s
+T S-t
+U S-u
+V S-v
+W S-w
+X S-x
+Y S-y
+Z S-z
+8 8
+0 0
+
+;; rename some vim commands
+cws (macro C-(w s)) ;; create new horizontal window
+cwv (macro C-(w v)) ;; create new vertical window
+cwh (macro C-(w h)) ;; move to left window
+cwj (macro C-(w j)) ;; move to below window
+cwk (macro C-(w k)) ;; move to above window
+cwl (macro C-(w l)) ;; move to right window
+cwq (macro C-(w q)) ;; close current window
+cwx (macro-repeat C-(w x) 50) ;; increase size of horizontal window
+cwi (macro-repeat C-(w i) 50) ;; increase size of vertical window
+cwz (macro-repeat C-(w z) 50) ;; decrease size of horizontal window
+cwd (macro-repeat C-(w d) 50) ;; decrease size of vertical window
+
+;; Open translate page in a new anonimous tab
+translate_page (macro C-S-n h t t p s @: / / t r a n s l a t e . g o o g l e . c o m . b r / @? h l = p t - @B @R @& s l = e n @& t l = p t @& o p = t r a n s l a t e ret)
+;; Put an equal sign with 2 spaces
+equal (tap-dance 200 ( (macro spc = spc) (macro spc = = spc) ))
+
+;; copilot commands
+cca (macro C-(c a))
+ccn (macro C-(c n))
+ccp (macro C-(c p))
+ccc (macro C-(c c))
+
+;; tap-hold keys with letters for tap and layer change for hold
+;; Change hold_timeout in case a key is activating too fast or too slow
+
+spc_sft (tap-hold-release 220 200 spc @space_sft)
+spc_qrty (tap-hold-release $tap_timeout $hold_timeout spc @space_qwerty)
+t_key (tap-hold-release $tap_timeout $hold_timeout t @mov)
+n_key (tap-hold-release $tap_timeout $hold_timeout n @ctl_func) ;;
+n_key_upper (tap-hold-release $tap_timeout $hold_timeout @N @ctl_func)
+esc_vim (tap-hold-release $tap_timeout $hold_timeout esc @vim)
+great (tap-hold-release $tap_timeout $hold_timeout @greater @lay) ;; switch for < after
+.ms (tap-hold-release $tap_timeout $hold_timeout . @mse)
+
+;;Tap-dance
+comma_equal (tap-dance 1000 (, = ( macro (= =) )))
+double_press_til (tap-dance 1000 (' @~))
+
+
+;; Caps for just one word
+single_caps (caps-word-custom
+        2000 ;;Time to turn it off, if idle
+        ;;keys to apply shift
+        (a b c d e f g h i j k l m n o p q r s t u v w x y z)
+        ;;keys to not apply shift and not terminate behaviour
+        (kp0 kp1 kp2 kp3 kp4 kp5 kp6 kp7 kp8 kp9 bspc del left rght 0 1 2 3 4 5 6 7 8 9 - lsft ')
+        )
+
+;;Mouse commands
+mwu (mwheel-up 50 120)
+mwd (mwheel-down 50 120)
+mwl (mwheel-left 50 120)
+mwr (mwheel-right 50 120)
+
+m_click_move (macro mltp (movemouse-left 5000 50) mltp (movemouse-right 5000 50) )
+
+m_down_middle (macro (movemouse-down 3000 50) mmtp )
+
+)
+
+    (deflayer qwerty
+     grv 1    2    3    4    5    6    7    8    9    0    -    =    bspc
+     tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+     caps a    s    d    f    g    h    j    k    l    ;    '    ret
+     lsft z    x    c    v    b    n    m    ,    .    /    rsft up
+     lctl lmet lalt           @spc_qrty            XX  rctl left down rght
+    )
+
+    (deflayer colemak_dh_modified
+     @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
+     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] caps
+     @esc_vim a     s    r @t_key  @comma_equal      @double_press_til   @n_key e    i    o    z    ret
+     lsft      c     d    g    v    j      h    m     .    y  x   @single_caps up
+     lctl lmet lalt           @spc_sft            XX     rctl left down rght
+    )
+
+    (deflayer space_layer
+     @great  @!   @?    XX  grv   @%    grv    @|    @&    @|    \    /    @*    bspc
+     @qwe   @r_par  @B     @L    @P     @W      @K          @F    @Q     @U     _     @{    @} lrld
+     @^      @A     @S     @R     @T    ;      _ @n_key_upper   @E     @I     @O     @Z    ret
+     grv    @C     @D     @G     @V     @J      @H     @M     @:    @Y    @X   rsft _
+     C-z lmet @under           spc            ralt rctl _ _ _
+    )
+
+    (deflayer layers ;; lrld means a reload on current running kanata
+     _  @cole @qwe lrld _    _    _    _    _    _    _    _    _   _  
+     _  _  _  _   _    _    _    _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _ _
+     _    _    _              _              _    _ _  _ _
+    )
+
+    (deflayer space_layer_qwerty
+     _ _  _  _ _    _    _    _    _    _    _    _    _   _  
+     @cole  _  _  _   _    _    _    _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _ _
+     _    _    _              _              _    _ _ _ _
+    )
+
+    (deflayer windows_functions ;; Holding n key (right index)
+     XX    XX    XX    XX    XX    XX    XX      XX  XX  XX  XX    XX   XX XX
+     XX XX XX XX       XX     XX    XX XX XX XX volu  XX  XX XX 
+     XX XX @ccp @ccn bspc del    XX XX  XX XX vold  XX  XX   
+     XX XX @ccc @cca  XX  XX           XX  XX XX XX mute  XX XX 
+     XX XX    XX              ret              XX       XX XX XX XX
+    )
+
+    (deflayer movements ;; Holding f key (left index)
+     XX XX XX   XX   XX   XX   XX   XX   XX   XX   XX  XX  XX XX
+     XX C-S-t C-w C-t   f5 @translate_page    XX C-left C-rght XX XX XX XX XX
+     XX C-S-n C-S-tab C-tab XX    XX    left down up rght   XX XX  XX
+     lsft XX @m_click_move  XX @m_down_middle   XX   XX C-S-left C-S-rght XX XX XX XX
+     _    XX    lalt               ret             XX       XX XX XX XX
+    )
+
+    (deflayer vim_layer ;; Holding caps key in default position
+     _     _   _   _   _   _   _   _   _   _   _   _   _  _
+     @mwu C-u @cwq @cwx @cwi    _  _ _ + = @greater _ _    _
+     _ C-d _ @cwz @cwd _   @cwh  @cwj   @cwk   @cwl  _ _  _
+     @mwd @mwl @mwr @cws @cwv _           _ _ _ _ _ _ _
+     _    _    _               spc             _       _ _ _ _
+    )
+
+    (deflayer mouse
+     _    _    _    _    _    _    _    _    _    _    _    _    _    _
+     _    @mwu bck  _    fwd  _    _    _    _    _    _    _    _    _
+     _    @mwd mlft _    mrgt mmid _    _    _    _    _    _    _
+     _    _    _    _    _    _    _    _    _    _    _    _ _
+     _    _    _              _              _    _ _  _ _
+    )
+
+    (defcfg
+     process-unmapped-keys yes ;; Uncomment for being able to press keys not present in defsrc
+     log-layer-changes no
+     ;; windows-altgr add-lctl-release
+    )
