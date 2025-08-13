@@ -115,8 +115,12 @@ esc_vim (tap-hold-release $tap_timeout $hold_timeout esc @vim)
 great (tap-hold-release $tap_timeout $hold_timeout @greater @lay) ;; switch for < after
 .ms (tap-hold-release $tap_timeout $hold_timeout . @mse)
 
+;;Macros for programming
++= (macro spc + = spc)
+=> (macro spc = @greater spc) ;; Mostly for rust's matches
+
 ;;Tap-dance
-comma_equal (tap-dance 1000 (, = ( macro (= =) )))
+comma_equal (tap-dance 1000 (, = ))
 double_press_til (tap-dance 1000 (' @~))
 
 
@@ -151,17 +155,17 @@ m_down_middle (macro (movemouse-down 3000 50) mmtp )
 
     (deflayer colemak_dh_modified
      @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
-     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] caps
-     @esc_vim a     s    r @t_key  @comma_equal      @double_press_til   @n_key e    i    o    z    ret
+     tab    @l_par b    l    p     w     k    f     q    u    z     [    ] caps
+     @esc_vim a     s    r @t_key  @comma_equal      @double_press_til   @n_key e  i  o  XX  ret
      lsft      c     d    g    v    j      h    m     .    y  x   @single_caps up
      lctl lmet lalt           @spc_sft            XX     rctl left down rght
     )
 
     (deflayer space_layer
-     @great  @!   @?    XX  grv   @%    grv    @|    @&    @|    \    /    @*    bspc
-     @qwe   @r_par  @B     @L    @P     @W      @K          @F    @Q     @U     _     @{    @} lrld
-     @^      @A     @S     @R     @T    ;      _ @n_key_upper   @E     @I     @O     @Z    ret
-     grv    @C     @D     @G     @V     @J      @H     @M     @:    @Y    @X   rsft _
+     @great  @!   @?    @+=  @=>   XX   XX     @&    @|    XX    \    /    @*    bspc
+     @qwe   @r_par  @B     @L    @P     @W      @K          @F    @Q     @U     @Z     @{    @} lrld
+     grv      @A     @S     @R     @T    ;      @quote @n_key_upper   @E     @I     @O     XX    ret
+     XX    @C     @D     @G     @V     @J      @H     @M     @:    @Y    @X   rsft _
      C-z lmet @under           spc            ralt rctl _ _ _
     )
 
@@ -183,10 +187,10 @@ m_down_middle (macro (movemouse-down 3000 50) mmtp )
 
     (deflayer windows_functions ;; Holding n key (right index)
      XX    XX    XX    XX    XX    XX    XX      XX  XX  XX  XX    XX   XX XX
-     XX XX XX XX       XX     XX    XX XX XX XX volu  XX  XX XX 
-     XX XX @ccp @ccn bspc del    XX XX  XX XX vold  XX  XX   
-     XX XX @ccc @cca  XX  XX           XX  XX XX XX mute  XX XX 
-     XX XX    XX              ret              XX       XX XX XX XX
+     XX XX XX XX       XX     XX    XX XX volu XX XX  XX  XX XX 
+     XX XX XX XX bspc del    XX XX  vold XX XX  XX  XX   
+     XX XX XX XX  XX  XX           XX  XX mute XX XX  XX XX 
+     XX XX    XX              XX              XX       XX XX XX XX
     )
 
     (deflayer movements ;; Holding f key (left index)
@@ -199,7 +203,7 @@ m_down_middle (macro (movemouse-down 3000 50) mmtp )
 
     (deflayer vim_layer ;; Holding caps key in default position
      _     _   _   _   _   _   _   _   _   _   _   _   _  _
-     @mwu C-u @cwq @cwx @cwi    _  _ _ + = @greater _ _    _
+     @mwu C-u @cwq @cwx @cwi    _  _ _ _ _ _ _ _    _
      _ C-d _ @cwz @cwd _   @cwh  @cwj   @cwk   @cwl  _ _  _
      @mwd @mwl @mwr @cws @cwv _           _ _ _ _ _ _ _
      _    _    _               spc             _       _ _ _ _
