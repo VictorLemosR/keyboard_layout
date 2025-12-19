@@ -93,9 +93,9 @@ cwz (macro-repeat C-(w z) 50) ;; decrease size of horizontal window
 cwd (macro-repeat C-(w d) 50) ;; decrease size of vertical window
 
 ;; Open translate page in a new anonimous tab
-translate_page (macro C-S-n h t t p s @: / / t r a n s l a t e . g o o g l e . c o m . b r / @? h l = p t - @B @R @& s l = e n @& t l = p t @& o p = t r a n s l a t e ret)
-;; Put an equal sign with 2 spaces
-equal (tap-dance 200 ( (macro spc = spc) (macro spc = = spc) ))
+translate_page (macro C-S-p 500 h t t p s @: / / t r a n s l a t e . g o o g l e . c o m . b r / @? h l = p t - @B @R @& s l = e n @& t l = p t @& o p = t r a n s l a t e ret)
+;; Put an equal sign with 2 spaces - not used anymore
+;;equal (tap-dance 200 ( (macro spc = spc) (macro spc = = spc) ))
 
 ;; copilot commands
 cca (macro C-(c a))
@@ -155,16 +155,16 @@ m_down_middle (macro (movemouse-down 3000 50) mmtp )
 
     (deflayer colemak_dh_modified
      @less 1    2    3    4    5   6       7    8    9    0    -    +    bspc
-     tab    @l_par b    l    p     w     k    f     q    u    z     [    ] caps
-     @esc_vim a     s    r @t_key  @comma_equal      @double_press_til   @n_key e  i  o  XX  ret
+     tab    @l_par b    l    p     w     k    f     q    u    @quote     [    ] caps
+     @esc_vim a     s    r @t_key  @comma_equal      @double_press_til   @n_key e  i  o  z  ret
      lsft      c     d    g    v    j      h    m     .    y  x   @single_caps up
      lctl lmet lalt           @spc_sft            XX     rctl left down rght
     )
 
     (deflayer space_layer
      @great  @!   @?    @+=  @=>   XX   XX     @&    @|    XX    \    /    @*    bspc
-     @qwe   @r_par  @B     @L    @P     @W      @K          @F    @Q     @U     @Z     @{    @} lrld
-     grv      @A     @S     @R     @T    ;      @quote @n_key_upper   @E     @I     @O     XX    ret
+     @qwe   @r_par  @B     @L    @P     @W      @K          @F    @Q     @U     XX     @{    @} lrld
+     grv      @A     @S     @R     @T    ;      XX @n_key_upper   @E     @I     @O     @Z    ret
      XX    @C     @D     @G     @V     @J      @H     @M     @:    @Y    @X   rsft _
      C-z lmet @under           spc            ralt rctl _ _ _
     )
@@ -196,7 +196,7 @@ m_down_middle (macro (movemouse-down 3000 50) mmtp )
     (deflayer movements ;; Holding f key (left index)
      XX XX XX   XX   XX   XX   XX   XX   XX   XX   XX  XX  XX XX
      XX C-S-t C-w C-t   f5 @translate_page    XX C-left C-rght XX XX XX XX XX
-     XX C-S-n C-S-tab C-tab XX    XX    left down up rght   XX XX  XX
+     XX C-S-p C-S-tab C-tab XX    XX    left down up rght   XX XX  XX
      lsft XX @m_click_move  XX @m_down_middle   XX   XX C-S-left C-S-rght XX XX XX XX
      _    XX    lalt               ret             XX       XX XX XX XX
     )
